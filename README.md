@@ -21,7 +21,10 @@ npm ci          # install exactly what package-lock.json lists
 npm run dev     # live preview at http://localhost:4321
 npm run check   # type-check everything
 npm run build   # build the site into dist/
+npm test        # end-to-end checks of the built site, desktop and phone
 ```
+
+The tests use the Chrome installed on your computer. Every pull request runs the same checks on GitHub (type-check, build, dependency audit, end-to-end tests).
 
 - **Content** (projects, images, captions, contact details) lives in `src/data/site.ts`. Add a project there and its page, its tile on Projects and its pieces on the map all follow.
 - **Images** go in `src/assets/img/`. Add the best-quality copy you have: the build makes AVIF and WebP versions at several sizes, and each screen downloads the smallest one that looks sharp.
