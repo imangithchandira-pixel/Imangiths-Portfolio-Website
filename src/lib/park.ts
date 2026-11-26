@@ -56,7 +56,8 @@ export function rng(seed: number) {
   };
 }
 
-const f1 = (n: number) => n.toFixed(1);
+// Coordinates to a tenth of a map unit, without a trailing .0, to keep the page small.
+const f1 = (n: number) => n.toFixed(1).replace(/\.0$/, '').replace(/^-0$/, '0');
 
 function attrs(a: Record<string, string | number | undefined>) {
   let s = '';
@@ -69,7 +70,7 @@ const tag = (name: string, a: Record<string, string | number | undefined>, inner
 
 function pathOf(pts: Pt[]) {
   let d = '';
-  for (let i = 0; i < pts.length; i++) d += (i ? ' L ' : 'M ') + f1(pts[i][0]) + ' ' + f1(pts[i][1]);
+  for (let i = 0; i < pts.length; i++) d += (i ? 'L' : 'M') + f1(pts[i][0]) + ' ' + f1(pts[i][1]);
   return d;
 }
 

@@ -1,0 +1,12 @@
+---
+/* Instant page changes. Chromium browsers fetch the site's other pages in the
+   background, and fully render a page the moment a visitor points at (or
+   starts to tap) a link to it, so following the link shows it at once. Other
+   browsers ignore this. */
+const rules = {
+  prefetch: [{ where: { href_matches: '/*' }, eagerness: 'eager' }],
+  prerender: [{ where: { href_matches: '/*' }, eagerness: 'moderate' }]
+};
+---
+
+<script is:inline type="speculationrules" set:html={JSON.stringify(rules)} />

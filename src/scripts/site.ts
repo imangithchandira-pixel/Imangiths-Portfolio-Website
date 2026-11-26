@@ -10,11 +10,15 @@ document.querySelectorAll('[data-year]').forEach((el) => {
   if (el.textContent !== year) el.textContent = year;
 });
 
-function onScroll() {
-  html.classList.toggle('is-scrolled', window.scrollY > 8);
+// The header's white wash shows once the page has scrolled. Watching a marker
+// at the top of the page means no work at all on each scroll.
+if ('IntersectionObserver' in window) {
+  const marker = document.createElement('div');
+  marker.setAttribute('aria-hidden', 'true');
+  marker.className = 'scroll-marker';
+  document.body.prepend(marker);
+  new IntersectionObserver(([en]) => html.classList.toggle('is-scrolled', !en.isIntersecting)).observe(marker);
 }
-addEventListener('scroll', onScroll, { passive: true });
-onScroll();
 
 /* ---------- reveals ---------- */
 
