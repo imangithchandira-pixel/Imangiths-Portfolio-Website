@@ -1,10 +1,18 @@
 ---
 import Base from '../layouts/Base.astro';
 import { SITE } from '../data/site';
-import { buildPark, imgUrl } from '../lib/park';
+import { Picture } from 'astro:assets';
+import { buildPark } from '../lib/park';
+import { source, widths, ogImage } from '../lib/images';
 
 const { W, H, nodes, svg } = buildPark();
 const r = (n: number) => n.toFixed(1);
+const og = await ogImage('marseille-md');
+
+// On first view the map is 1.2 x the screen's longer side (see scripts/map.ts),
+// so a piece w map units wide is drawn w * 1.2 * max(100vw / 6000, 100vh / 4200)
+// CSS pixels. The map raises `sizes` as you zoom in, fetching sharper copies.
+const nodeSizes = (w: number) => `calc(max(100vw, ${r((W / H) * 100)}vh) * ${((w * 1.2) / W).toFixed(4)})`;
 
 // Each piece's place on the map, as plain CSS rules (no inline style attributes).
 const css =
@@ -18,7 +26,7 @@ const css =
     .join('');
 ---
 
-<Base description={SITE.description} htmlClass="is-map" wash={false} footer={false} ogImage="/assets/img/marseille-md.webp">
+<Base description={SITE.description} htmlClass="is-map" wash={false} footer={false} ogImage={og}>
   <style is:inline slot="head" set:html={css} />
 
   <main class="map" data-map data-status="loading" aria-label="Projects map" tabindex="-1">
@@ -35,7 +43,18 @@ const css =
             data-drift={[n.f1, n.f2, n.p1, n.p2].map((v) => v.toFixed(6)).join(' ')}
           >
             <a class="map__link" href={`/projects/${n.project.slug}`} draggable="false" aria-label={n.project.title}>
-              <img class="map__img" src={imgUrl(n.src)} alt="" draggable="false" decoding="async" />
+              <Picture
+                class="map__img"
+                src={source(n.src)}
+                widths={widths(n.src, [240, 360, 480, 640])}
+                sizes={nodeSizes(n.w)}
+                formats={['avif']}
+                fallbackFormat="webp"
+                alt=""
+                draggable="false"
+                loading="eager"
+                data-w={r(n.w)}
+              />
             </a>
           </div>
         ))

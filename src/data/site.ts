@@ -2,7 +2,8 @@
   All site content lives here.
 
   To add a project:
-    1. Put its images in public/assets/img/ (.webp).
+    1. Put its images in src/assets/img/ (.webp, .jpg or .png; they are
+       re-encoded at build time, so use the best quality you have).
     2. Add an entry to PROJECTS with a unique `slug` (it becomes /projects/<slug>).
        - `cover`  : image shown on the Projects page. An optional `tile` replaces it
                     there when the grid cell suits a differently shaped image.
@@ -58,9 +59,7 @@ export const SITE = {
   // send notes to the inbox above. Empty means the contact form falls back to
   // opening the visitor's own email app.
   formKey: '5a71475e-42ca-448b-a688-51d704f249b9',
-  linkedin: 'https://www.linkedin.com/in/chandira-imanjith-b4b7283a2',
-  imgPath: '/assets/img/',
-  imgExt: '.webp'
+  linkedin: 'https://www.linkedin.com/in/chandira-imanjith-b4b7283a2'
 } as const;
 
 export const MAP = { width: 6000, height: 4200, nodeScale: 1.28 } as const;

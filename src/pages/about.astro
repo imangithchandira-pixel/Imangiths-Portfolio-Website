@@ -1,6 +1,8 @@
 ---
 import Base from '../layouts/Base.astro';
+import { Picture } from 'astro:assets';
 import { SITE } from '../data/site';
+import { source } from '../lib/images';
 
 const mailto = `mailto:${SITE.email}`;
 ---
@@ -12,7 +14,7 @@ const mailto = `mailto:${SITE.email}`;
 
     <section class="grid about__main">
       <div class="about__portrait media" data-reveal="img">
-        <img src="/assets/img/portrait.webp" alt="Portrait of Chandira Imanjith" width="800" height="800">
+        <Picture src={source('portrait')} widths={[320, 480, 640, 800]} sizes="(max-width: 600px) 72vw, (max-width: 991px) 48vw, 33vw" formats={['avif']} fallbackFormat="webp" alt="Portrait of Chandira Imanjith" loading="eager" fetchpriority="high" />
       </div>
       <div class="about__body">
         <div class="about__text">

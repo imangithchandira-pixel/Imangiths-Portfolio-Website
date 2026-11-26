@@ -1,7 +1,11 @@
 ---
 import Base from '../layouts/Base.astro';
 import { PROJECTS } from '../data/site';
-import { imgUrl } from '../lib/park';
+import { Picture } from 'astro:assets';
+import { source, widths } from '../lib/images';
+
+// A tile is half the content width (one column on phones), at most 680px wide.
+const tileSizes = '(max-width: 767px) calc(100vw - 40px), (min-width: 1500px) 680px, calc(50vw - 62px)';
 
 // Two columns, filled alternately, so tall and wide tiles interlock. Each tile
 // also gets its place in project order for when the columns collapse to one.
@@ -48,7 +52,16 @@ const view = `0 ${-RISE} ${SPAN} ${RISE}`;
           {col.map(({ p, i, image }) => (
             <a class={`bento__item o${i}`} href={`/projects/${p.slug}`}>
               <div class="media" data-reveal="img">
-                <img src={imgUrl(image[0])} alt="" width={image[1]} height={image[2]} decoding="async" />
+                <Picture
+                  src={source(image[0])}
+                  widths={widths(image[0], [360, 540, 720, 960, 1280])}
+                  sizes={tileSizes}
+                  formats={['avif']}
+                  fallbackFormat="webp"
+                  alt=""
+                  loading={i < 2 ? 'eager' : 'lazy'}
+                  fetchpriority={i === 0 ? 'high' : 'auto'}
+                />
               </div>
               <span class="bento__title">{p.title}</span>
             </a>
