@@ -14,6 +14,10 @@ updates:
       everything-else:
         patterns: ['*']
         exclude-patterns: ['astro', '@astrojs/*']
+    ignore:
+      # @astrojs/check supports TypeScript 5 and 6 only; take a new major when it does.
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']
   - package-ecosystem: github-actions
     directory: /
     schedule:
