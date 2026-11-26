@@ -25,7 +25,7 @@
 
 :root {
   --ink: #202020;
-  --ink-50: rgba(32, 32, 32, .5);
+  --ink-50: rgba(32, 32, 32, .62);   /* secondary text: #777 on white, 4.6:1 contrast (WCAG AA) */
   --ink-25: rgba(32, 32, 32, .25);
   --paper: #fff;
   --ui-line: #e3e0d9;
@@ -112,7 +112,7 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .header__links { display: flex; align-items: center; gap: 16px; font-size: .875rem; line-height: 1.25; }
 .header a { transition: opacity .3s; }
 .header a:hover { opacity: .4; }
-.header__links a[aria-current="page"] { opacity: .5; }
+.header__links a[aria-current="page"] { opacity: .62; }
 
 /* Touch screens: give each header link a ~44px tap area. The padding is
    cancelled by an equal negative margin, so nothing moves visually; the
@@ -178,7 +178,13 @@ main { flex: 1 0 auto; }
 /* ---------- reveals (only when JS is running) ---------- */
 
 .w  { display: inline-block; overflow: hidden; vertical-align: top; text-indent: 0; padding-bottom: .16em; margin-bottom: -.16em; }
-.wi { display: inline-block; transition: transform 1s var(--ease-out); transition-delay: calc(var(--i, 0) * 80ms); }
+.wi { display: inline-block; transition: transform 1s var(--ease-out); }
+/* Each line starts 80 ms after the one above (site.ts tags words with their line). */
+.l1 { transition-delay: 80ms; } .l2 { transition-delay: 160ms; } .l3 { transition-delay: 240ms; } .l4 { transition-delay: 320ms; }
+.l5 { transition-delay: 400ms; } .l6 { transition-delay: 480ms; } .l7 { transition-delay: 560ms; } .l8 { transition-delay: 640ms; } .l9 { transition-delay: 720ms; }
+.l10 { transition-delay: 800ms; } .l11 { transition-delay: 880ms; } .l12 { transition-delay: 960ms; } .l13 { transition-delay: 1040ms; } .l14 { transition-delay: 1120ms; }
+.l15 { transition-delay: 1200ms; } .l16 { transition-delay: 1280ms; } .l17 { transition-delay: 1360ms; } .l18 { transition-delay: 1440ms; } .l19 { transition-delay: 1520ms; }
+
 
 .media { background: rgba(0, 0, 0, .05); overflow: hidden; }
 .media img { width: 100%; height: 100%; object-fit: cover; }
@@ -515,7 +521,8 @@ main { flex: 1 0 auto; }
 .form__done p + p { margin-top: 12px; color: var(--ink-50); }
 
 .form__dots { display: flex; justify-content: center; margin-top: calc(var(--line) * 1.5); }
-.form__dot { display: grid; place-items: center; width: 14px; height: 14px; }
+/* 24px tap targets (WCAG 2.2), so each dot is easy to hit on a phone. */
+.form__dot { display: grid; place-items: center; width: 24px; height: 24px; margin-block: -5px; }
 .form__dot::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--ink-25); transition: background .2s; }
 .form__dot:hover::after { background: rgba(32, 32, 32, .4); }
 .form__dot[aria-current]::after { background: rgba(32, 32, 32, .6); }

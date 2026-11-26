@@ -5,7 +5,9 @@ export default defineConfig({
   site: 'https://imangiths-portfolio-website.vercel.app',
   // about.html, projects/malaga.html …; Vercel serves them without the
   // extension (cleanUrls in vercel.json).
-  build: { format: 'file' },
+  // The stylesheet (under 4 KB compressed) goes inside each page, so the first
+  // paint doesn't wait for a second request. Its hash is in the CSP.
+  build: { format: 'file', inlineStylesheets: 'always' },
   trailingSlash: 'never',
   devToolbar: { enabled: false },
   security: {

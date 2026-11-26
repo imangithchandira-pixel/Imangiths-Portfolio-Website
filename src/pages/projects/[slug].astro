@@ -71,7 +71,8 @@ const css = Array.from(spans)
                     formats={['avif']}
                     fallbackFormat="webp"
                     alt={f.caption || project.title}
-                    loading={figureCount++ < 2 ? 'eager' : 'lazy'}
+                    loading={figureCount < 2 ? 'eager' : 'lazy'}
+                    fetchpriority={figureCount++ === 0 ? 'high' : 'auto'}
                   />
                 </div>
                 {f.caption && <figcaption data-reveal="text">{f.caption}</figcaption>}
