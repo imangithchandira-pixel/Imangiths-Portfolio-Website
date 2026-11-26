@@ -1,6 +1,7 @@
 ---
 import type { GetStaticPaths } from 'astro';
 import Base from '../../layouts/Base.astro';
+import InlineStyle from '../../components/InlineStyle.astro';
 import { PROJECTS, type Project } from '../../data/site';
 import { Picture } from 'astro:assets';
 import { source, widths, ogImage } from '../../lib/images';
@@ -36,7 +37,7 @@ const css = Array.from(spans)
 ---
 
 <Base description={project.description} ogImage={og}>
-  <style is:inline slot="head" set:html={`@media (min-width:992px){${css}}`} />
+  <InlineStyle slot="head" css={`@media (min-width:992px){${css}}`} />
 
   <main class="project">
     <section class="grid project__intro">

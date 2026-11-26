@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import InlineStyle from '../components/InlineStyle.astro';
 import { SITE } from '../data/site';
 import { Picture } from 'astro:assets';
 import { buildPark } from '../lib/park';
@@ -41,7 +42,7 @@ const css =
 ---
 
 <Base description={SITE.description} htmlClass="is-map" wash={false} footer={false} ogImage={og}>
-  <style is:inline slot="head" set:html={css} />
+  <InlineStyle slot="head" css={css} />
 
   <main class="map" data-map data-w={W} data-h={H} aria-label="Projects map" tabindex="-1">
     <h1 class="sr-only">Chandira Imanjith — sketches and studies</h1>
