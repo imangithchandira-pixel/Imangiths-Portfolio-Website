@@ -64,6 +64,23 @@ test('home map: keyboard and wheel move the camera, and it comes to rest', async
   await expect.poll(() => world.evaluate((el) => getComputedStyle(el).transform)).not.toBe(zoomed);
 });
 
+test('pages do not jump about while loading (CLS)', async ({ page }) => {
+  for (const path of pages) {
+    await page.addInitScript(() => {
+      (window as unknown as { __cls: number }).__cls = 0;
+      new PerformanceObserver((list) => {
+        for (const e of list.getEntries() as unknown as { value: number; hadRecentInput: boolean }[]) {
+          if (!e.hadRecentInput) (window as unknown as { __cls: number }).__cls += e.value;
+        }
+      }).observe({ type: 'layout-shift', buffered: true });
+    });
+    await page.goto(path, { waitUntil: 'networkidle' });
+    await page.waitForTimeout(500);
+    const cls = await page.evaluate(() => (window as unknown as { __cls: number }).__cls);
+    expect(cls, `layout shift on ${path}`).toBeLessThan(0.1);
+  }
+});
+
 test('projects page lists every project in order', async ({ page }) => {
   await page.goto('/projects');
   for (const p of PROJECTS) await expect(page.locator(`a[href="/projects/${p.slug}"]`)).toContainText(p.title);
