@@ -22,10 +22,11 @@ site can be viewed, not so it can be reused.
 
 3. Third-party material
 
-   The site uses the Newsreader typeface, loaded from Google Fonts and not
-   included in this repository. Newsreader is licensed under the SIL Open
-   Font License 1.1 (https://openfontlicense.org) and remains the property
-   of its authors.
+   The site uses the Newsreader typeface (src/assets/fonts/), cut down to
+   the one weight and the characters the site needs. Newsreader is licensed
+   under the SIL Open Font License 1.1, a copy of which is in
+   src/assets/fonts/OFL.txt, and remains the property of its authors. That
+   licence, not this one, applies to the font files.
 
 Brief quotation or linking for commentary, review or reference is welcome
 where the law allows it, with credit to Chandira Imanjith.

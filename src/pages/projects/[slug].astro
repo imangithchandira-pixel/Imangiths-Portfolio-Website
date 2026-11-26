@@ -2,7 +2,8 @@
 import type { GetStaticPaths } from 'astro';
 import Base from '../../layouts/Base.astro';
 import { PROJECTS, type Project } from '../../data/site';
-import { imgUrl } from '../../lib/park';
+import { Picture } from 'astro:assets';
+import { source, widths, ogImage } from '../../lib/images';
 
 export const getStaticPaths = (() =>
   PROJECTS.map((project, index) => ({
@@ -16,6 +17,12 @@ interface Props {
 }
 
 const { project, next } = Astro.props;
+const og = await ogImage(project.cover[0]);
+
+// A figure spans `span` of 12 columns on wide screens and the full width below 992px.
+const figSizes = (span: number) =>
+  `(max-width: 991px) calc(100vw - 40px), calc((100vw - 260px) / 12 * ${span} + ${20 * (span - 1)}px)`;
+let figureCount = 0;
 
 // Where each figure sits on the 12-column grid, as classes (no inline styles).
 const spans = new Set<string>();
@@ -28,7 +35,7 @@ const css = Array.from(spans)
   .join('');
 ---
 
-<Base description={project.description} ogImage={imgUrl(project.cover[0])}>
+<Base description={project.description} ogImage={og}>
   <style is:inline slot="head" set:html={`@media (min-width:992px){${css}}`} />
 
   <main class="project">
@@ -56,7 +63,15 @@ const css = Array.from(spans)
             {row.map((f) => (
               <figure class={`project__fig c${f.cols[0]}-${f.cols[1]}`}>
                 <div class="media" data-reveal="img">
-                  <img src={imgUrl(f.img[0])} alt={f.caption || project.title} width={f.img[1]} height={f.img[2]} loading="lazy" decoding="async" />
+                  <Picture
+                    src={source(f.img[0])}
+                    widths={widths(f.img[0], [320, 480, 640, 800, 1000, 1280])}
+                    sizes={figSizes(f.cols[1])}
+                    formats={['avif']}
+                    fallbackFormat="webp"
+                    alt={f.caption || project.title}
+                    loading={figureCount++ < 2 ? 'eager' : 'lazy'}
+                  />
                 </div>
                 {f.caption && <figcaption data-reveal="text">{f.caption}</figcaption>}
               </figure>

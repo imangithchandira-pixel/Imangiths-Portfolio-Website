@@ -7,7 +7,7 @@
    is given, so it rearranges itself when projects are added or moved in
    src/data/site.ts. The randomness is seeded, so every build draws the same park. */
 
-import { MAP, PROJECTS, SITE, type Project, type RouteType } from '../data/site';
+import { MAP, PROJECTS, type Project, type RouteType } from '../data/site';
 
 const TAU = Math.PI * 2;
 
@@ -459,5 +459,3 @@ export function buildPark() {
   const svg = draw(W, H, nodes, links, rng(4071));
   return { W, H, nodes, svg };
 }
-
-export const imgUrl = (name: string) => SITE.imgPath + name + SITE.imgExt;

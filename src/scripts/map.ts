@@ -233,7 +233,7 @@ function start(root: HTMLElement) {
   }
   let pending = nodes.length;
   for (const n of nodes) {
-    const img = n.link.firstElementChild as HTMLImageElement;
+    const img = n.link.querySelector('img')!;
     const done = () => { if (--pending <= 0) show(); };
     if (img.complete) done();
     else { img.addEventListener('load', done); img.addEventListener('error', done); }

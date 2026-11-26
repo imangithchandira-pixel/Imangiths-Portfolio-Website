@@ -24,7 +24,7 @@ npm run build   # build the site into dist/
 ```
 
 - **Content** (projects, images, captions, contact details) lives in `src/data/site.ts`. Add a project there and its page, its tile on Projects and its pieces on the map all follow.
-- **Images** go in `public/assets/img/`.
+- **Images** go in `src/assets/img/`. Add the best-quality copy you have: the build makes AVIF and WebP versions at several sizes, and each screen downloads the smallest one that looks sharp.
 - **Pages** are in `src/pages/`, styles in `src/styles/global.css` and the little JavaScript the site runs in `src/scripts/`.
 - The park on the home page is drawn once at build time by `src/lib/park.ts`.
 
