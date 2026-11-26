@@ -12,6 +12,24 @@ Sketches and studies in ink and watercolor by Chandira Imanjith, a first-year ar
 - **Projects** lists every project in one place.
 - **About** has a short introduction, with a contact form below it.
 
+## Working on the site
+
+The site is built with [Astro](https://astro.build) into plain static pages, so visitors get finished HTML with very little JavaScript. You need Node.js 24.
+
+```sh
+npm ci          # install exactly what package-lock.json lists
+npm run dev     # live preview at http://localhost:4321
+npm run check   # type-check everything
+npm run build   # build the site into dist/
+```
+
+- **Content** (projects, images, captions, contact details) lives in `src/data/site.ts`. Add a project there and its page, its tile on Projects and its pieces on the map all follow.
+- **Images** go in `public/assets/img/`.
+- **Pages** are in `src/pages/`, styles in `src/styles/global.css` and the little JavaScript the site runs in `src/scripts/`.
+- The park on the home page is drawn once at build time by `src/lib/park.ts`.
+
+Pushing to `main` deploys to Vercel. Old links such as `project.html?p=malaga` redirect to the new addresses (`/projects/malaga`).
+
 ## Getting in touch
 
 The contact form sends your note by email through [Web3Forms](https://web3forms.com). If it can't be sent, it opens your own email app with the note ready to send instead. You can also write directly to [imangithchandira@gmail.com](mailto:imangithchandira@gmail.com) or connect on [LinkedIn](https://www.linkedin.com/in/chandira-imanjith-b4b7283a2).

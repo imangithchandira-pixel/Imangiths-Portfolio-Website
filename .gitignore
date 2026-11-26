@@ -1,8 +1,15 @@
+# Build output and dependencies
+dist/
+.astro/
+node_modules/
+.vercel/
+
 # Source PDFs and photos the web images were cut from (large; kept locally)
 originals/
 
 # Safety net: original scans, photos and documents anywhere in the project.
-# Only the web-ready images in assets/img/ and docs/ are meant to be public.
+# Only the web-ready images in public/assets/img/, src/assets/ and docs/ are
+# meant to be public.
 *.pdf
 *.psd
 *.ai
@@ -22,7 +29,8 @@ originals/
 *.jpg
 *.jpeg
 *.webp
-!assets/img/*
+!public/assets/img/*
+!src/assets/**
 !docs/*
 
 # OS and editor clutter
@@ -34,3 +42,4 @@ desktop.ini
 
 # Local Claude Code settings
 .claude/
+node_modules

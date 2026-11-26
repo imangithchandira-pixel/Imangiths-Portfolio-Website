@@ -1,0 +1,88 @@
+---
+import Base from '../layouts/Base.astro';
+import { SITE } from '../data/site';
+
+const mailto = `mailto:${SITE.email}`;
+---
+
+<Base description="Chandira Imanjith is a first-year architecture student at the City School of Architecture, Colombo." current="about">
+  <main>
+  <div class="about">
+    <h1 class="sr-only">About Chandira Imanjith</h1>
+
+    <section class="grid about__main">
+      <div class="about__portrait media" data-reveal="img">
+        <img src="/assets/img/portrait.webp" alt="Portrait of Chandira Imanjith" width="800" height="800">
+      </div>
+      <div class="about__body">
+        <div class="about__text">
+          <p data-reveal="text">I am a first-year architecture student with a strong curiosity about the relationship between people, nature, and the built environment. I enjoy observing everyday surroundings, exploring creative possibilities, and discovering how simple ideas can evolve into meaningful designs.</p>
+          <p data-reveal="text">For me, architecture is a continuous process of learning, questioning, experimenting, and understanding the world through different perspectives. I am particularly interested in exploring forms, spatial experiences, materials, and the influence of nature on design.</p>
+          <p data-reveal="text">As I begin my journey in architecture, I look forward to challenging my creativity, developing my design thinking, and discovering my own architectural identity.</p>
+        </div>
+        <ul class="about__links">
+          <li><a href={SITE.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn</a></li>
+          <li><a href={mailto}>Email</a></li>
+          <li class="dim"><a href="#contact">Get in touch ↓</a></li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <section class="contact" id="contact" aria-labelledby="contact-title">
+    <h2 id="contact-title" data-reveal="text">Get in touch</h2>
+    <p class="contact__lede" data-reveal="text">A question about a drawing, a collaboration, a studio opportunity, or simply a hello: three short steps and your note is on its way. Or write directly: <a href={mailto}>{SITE.email}</a></p>
+
+    <form class="form" data-form novalidate>
+      <input type="checkbox" name="botcheck" hidden tabindex="-1" autocomplete="off">
+      <p data-count>1/3</p>
+      <p class="form__label" data-label>Your information</p>
+
+      <fieldset class="form__step is-active" data-title="Your information">
+        <legend class="sr-only">Your information</legend>
+        <label class="sr-only" for="f-name">What is your name?</label>
+        <input id="f-name" name="name" type="text" placeholder="What is your name?" autocomplete="name" maxlength="100" required>
+        <label class="sr-only" for="f-email">Email address</label>
+        <input id="f-email" name="email" type="email" placeholder="Email address" autocomplete="email" maxlength="254" required>
+        <label class="sr-only" for="f-place">School, studio or company (optional)</label>
+        <input id="f-place" name="place" type="text" placeholder="School, studio or company (optional)" autocomplete="organization" maxlength="120">
+      </fieldset>
+
+      <fieldset class="form__step" data-title="What brings you here" hidden>
+        <legend class="sr-only">What brings you here</legend>
+        <label class="form__option"><input type="radio" name="reason" value="Just saying hello" checked>Just saying hello</label>
+        <label class="form__option"><input type="radio" name="reason" value="A question about a drawing">A question about a drawing</label>
+        <label class="form__option"><input type="radio" name="reason" value="A collaboration">A collaboration</label>
+        <label class="form__option"><input type="radio" name="reason" value="A studio or internship opportunity">A studio or internship opportunity</label>
+      </fieldset>
+
+      <fieldset class="form__step" data-title="Your message" hidden>
+        <legend class="sr-only">Your message</legend>
+        <label class="sr-only" for="f-message">Write your message</label>
+        <textarea id="f-message" name="message" placeholder="Write your message" maxlength="5000" required></textarea>
+      </fieldset>
+
+      <div class="form__step form__done" data-title="" hidden aria-live="polite">
+        <p data-thanks>Thank you.</p>
+        <p data-sent>Your note is on its way. I'll get back to you soon.</p>
+        <p data-opened hidden>Your email app should now be open with the note ready to send. If nothing opened, write to <a href={mailto}>{SITE.email}</a></p>
+      </div>
+
+      <div class="form__dots"></div>
+      <div class="form__actions">
+        <button type="button" data-back hidden>Back</button>
+        <button type="submit" data-next>Continue</button>
+      </div>
+    </form>
+
+    <p class="contact__links">
+      <a href={mailto}>Email</a>
+      <a href={SITE.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn ↗</a>
+    </p>
+  </section>
+  </main>
+</Base>
+
+<script>
+  import '../scripts/contact';
+</script>

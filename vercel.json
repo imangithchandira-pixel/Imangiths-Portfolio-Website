@@ -1,0 +1,45 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "astro",
+  "installCommand": "npm ci",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "redirects": [
+    {
+      "source": "/project.html",
+      "has": [
+        {
+          "type": "query",
+          "key": "p",
+          "value": "(?<slug>[a-z0-9-]+)"
+        }
+      ],
+      "destination": "/projects/:slug",
+      "permanent": true
+    },
+    {
+      "source": "/project",
+      "has": [
+        {
+          "type": "query",
+          "key": "p",
+          "value": "(?<slug>[a-z0-9-]+)"
+        }
+      ],
+      "destination": "/projects/:slug",
+      "permanent": true
+    },
+    {
+      "source": "/project.html",
+      "destination": "/projects",
+      "permanent": true
+    },
+    {
+      "source": "/project",
+      "destination": "/projects",
+      "permanent": true
+    }
+  ]
+}

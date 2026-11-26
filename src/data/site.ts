@@ -2,34 +2,70 @@
   All site content lives here.
 
   To add a project:
-    1. Put its images in assets/img/ (any web format; .webp is used below).
-    2. Add an entry to PROJECTS with a unique `slug`.
+    1. Put its images in public/assets/img/ (.webp).
+    2. Add an entry to PROJECTS with a unique `slug` (it becomes /projects/<slug>).
        - `cover`  : image shown on the Projects page. An optional `tile` replaces it
                     there when the grid cell suits a differently shaped image.
        - `rows`   : image rows on the project page. Each image sits on a 12-column
-                    grid: `cols: [startColumn, columnSpan]`.
+                    grid: `cols: [startColumn, columnSpan]`. The string 'meta' marks
+                    where the "About the piece" facts go.
        - `nodes`  : the pieces that float on the home-page map. `x`/`y` are the
                     centre of the image in map units (the map is 6000 x 4200) and
                     `size` is its width in map units.
        - `route`  : how this project's pieces are joined across the park on the home
                     page: 'boardwalk', 'stones', 'sand', 'stream' or 'gravel'.
     Image entries are [fileNameWithoutExtension, pixelWidth, pixelHeight].
+
+  The site is built from this file ahead of time, so a typo here fails the build
+  instead of breaking a page in someone's browser.
 */
 
-window.SITE = {
+export type Img = readonly [name: string, width: number, height: number];
+export type RouteType = 'boardwalk' | 'stones' | 'sand' | 'stream' | 'gravel';
+
+export interface Figure {
+  img: Img;
+  cols: readonly [start: number, span: number];
+  caption?: string;
+}
+
+export interface MapNode {
+  img: Img;
+  x: number;
+  y: number;
+  size: number;
+}
+
+export interface Project {
+  slug: string;
+  title: string;
+  route: RouteType;
+  description: string;
+  meta: readonly (readonly [label: string, value: string])[];
+  cover: Img;
+  tile?: Img;
+  rows: readonly (readonly Figure[] | 'meta')[];
+  nodes: readonly MapNode[];
+}
+
+export const SITE = {
   name: 'Chandira Imanjith',
+  url: 'https://imangiths-portfolio-website.vercel.app',
+  description:
+    'Sketches and studies by Chandira Imanjith, a first-year architecture student at the City School of Architecture, Colombo.',
   email: 'imangithchandira@gmail.com',
-  // Web3Forms access key (web3forms.com). Until it is filled in, the contact
-  // form falls back to opening the visitor's own email app.
+  // Web3Forms access key (web3forms.com). It is public by design: it can only
+  // send notes to the inbox above. Empty means the contact form falls back to
+  // opening the visitor's own email app.
   formKey: '5a71475e-42ca-448b-a688-51d704f249b9',
   linkedin: 'https://www.linkedin.com/in/chandira-imanjith-b4b7283a2',
-  imgPath: 'assets/img/',
+  imgPath: '/assets/img/',
   imgExt: '.webp'
-};
+} as const;
 
-window.MAP = { width: 6000, height: 4200, nodeScale: 1.28 };
+export const MAP = { width: 6000, height: 4200, nodeScale: 1.28 } as const;
 
-window.PROJECTS = [
+export const PROJECTS: readonly Project[] = [
   {
     slug: 'tower-sketches',
     title: 'Tower Sketches',

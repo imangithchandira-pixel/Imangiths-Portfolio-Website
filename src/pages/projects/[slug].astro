@@ -1,0 +1,74 @@
+---
+import type { GetStaticPaths } from 'astro';
+import Base from '../../layouts/Base.astro';
+import { PROJECTS, type Project } from '../../data/site';
+import { imgUrl } from '../../lib/park';
+
+export const getStaticPaths = (() =>
+  PROJECTS.map((project, index) => ({
+    params: { slug: project.slug },
+    props: { project, next: PROJECTS[(index + 1) % PROJECTS.length] }
+  }))) satisfies GetStaticPaths;
+
+interface Props {
+  project: Project;
+  next: Project;
+}
+
+const { project, next } = Astro.props;
+
+// Where each figure sits on the 12-column grid, as classes (no inline styles).
+const spans = new Set<string>();
+for (const row of project.rows) if (row !== 'meta') for (const f of row) spans.add(`${f.cols[0]}-${f.cols[1]}`);
+const css = Array.from(spans)
+  .map((s) => {
+    const [start, span] = s.split('-');
+    return `.project__fig.c${s}{grid-column:${start} / span ${span}}`;
+  })
+  .join('');
+---
+
+<Base description={project.description} ogImage={imgUrl(project.cover[0])}>
+  <style is:inline slot="head" set:html={`@media (min-width:992px){${css}}`} />
+
+  <main class="project">
+    <section class="grid project__intro">
+      <h1 class="project__title" data-reveal="text">{project.title}</h1>
+      <p class="project__desc" data-reveal="text">{project.description}</p>
+    </section>
+
+    {
+      project.rows.map((row) =>
+        row === 'meta' ? (
+          <section class="grid project__meta">
+            <h2 data-reveal="text">About the piece</h2>
+            <dl class="meta">
+              {project.meta.map(([label, value]) => (
+                <div data-reveal="text">
+                  <dt>{label}</dt>
+                  <dd>{value}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        ) : (
+          <section class="grid project__row">
+            {row.map((f) => (
+              <figure class={`project__fig c${f.cols[0]}-${f.cols[1]}`}>
+                <div class="media" data-reveal="img">
+                  <img src={imgUrl(f.img[0])} alt={f.caption || project.title} width={f.img[1]} height={f.img[2]} loading="lazy" decoding="async" />
+                </div>
+                {f.caption && <figcaption data-reveal="text">{f.caption}</figcaption>}
+              </figure>
+            ))}
+          </section>
+        )
+      )
+    }
+
+    <nav class="grid project__next" aria-label="Next project">
+      <span class="dim">Next</span>
+      <a href={`/projects/${next.slug}`}>{next.title}</a>
+    </nav>
+  </main>
+</Base>
