@@ -4,6 +4,7 @@ import fontUrl from '../assets/fonts/newsreader-350.woff2?url';
 import { SITE } from '../data/site';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import SpeculationRules from '../components/SpeculationRules.astro';
 
 interface Props {
   description: string;
@@ -39,10 +40,11 @@ const canonical = new URL(Astro.url.pathname.replace(/\.html$/, '').replace(/\/i
     <link rel="preload" href={fontUrl} as="font" type="font/woff2" crossorigin />
     <script is:inline>document.documentElement.classList.add('js');</script>
     <slot name="head" />
+    <SpeculationRules />
   </head>
   <body>
     <div class="topfade" aria-hidden="true">
-      <div class="topfade__blur"></div><div class="topfade__blur"></div><div class="topfade__blur"></div><div class="topfade__blur"></div>
+      <div class="topfade__blur"></div><div class="topfade__blur"></div><div class="topfade__blur"></div>
       {wash && <div class="topfade__wash"></div>}
     </div>
 

@@ -1,15 +1,27 @@
-/* Home: a pannable, zoomable park of every piece, with one route per project. */
+/* Home: a pannable, zoomable park of every piece, with one route per project.
+
+   Built to stay smooth on phones:
+   - The page arrives already showing the map at its opening view (the camera's
+     first position is pure CSS), so nothing waits for this script.
+   - The slow drift of the pieces is a CSS animation on the compositor.
+   - This script only runs frames while the map is moving, and stops when it
+     settles; an idle map costs nothing.
+   - Dragging follows the finger 1:1. Wheel, keys and the glide after a flick
+     ease towards their target.
+   - While zooming, the map is scaled as one GPU layer instead of being redrawn
+     every frame; it is redrawn crisply (hairlines and all) once it settles, and
+     pieces that are now drawn larger fetch sharper copies. */
 import { reduce } from './site';
-import { MAP } from '../data/site';
 
 const root = document.querySelector<HTMLElement>('[data-map]');
 if (root) start(root);
 
 function start(root: HTMLElement) {
-  const W = MAP.width, H = MAP.height;
+  const W = Number(root.dataset.w), H = Number(root.dataset.h);
   const LEVELS = 6, START_LEVEL = 2, RANGE = 6; // deepest zoom = 6 x the widest
-  const START_FILL = 1.2; // opening view: the map is 1.2 x the screen
+  const START_FILL = 1.2; // opening view: the map is 1.2 x the screen (matches global.css)
   const STEP = Math.pow(RANGE, 1 / (LEVELS - 1));
+  const EASE_MS = 120; // how quickly wheel, keys and glides catch up
   const canHover = matchMedia('(hover: hover)').matches;
 
   const world = root.querySelector<HTMLElement>('.map__world')!;
@@ -19,13 +31,28 @@ function start(root: HTMLElement) {
   const routes = Array.from(park.querySelectorAll<SVGGElement>('.park__route'));
 
   const nodes = Array.from(world.querySelectorAll<HTMLElement>('.map__node')).map((el) => {
-    const d = el.dataset.drift!.split(' ').map(Number);
+    const link = el.querySelector('a')!;
+    const img = link.querySelector('img')!;
     return {
-      el, link: el.firstElementChild as HTMLAnchorElement,
+      el, link, img,
+      sources: Array.from(link.querySelectorAll('source')),
       x: Number(el.dataset.x), y: Number(el.dataset.y), pi: Number(el.dataset.pi),
-      f1: d[0], f2: d[1], p1: d[2], p2: d[3]
+      w: Number(el.dataset.w), h: Number(el.dataset.h),
+      drawn: 0 // the width, in CSS px, its current image was chosen for
     };
   });
+
+  /* ---------- each piece fades in once its image is decoded ---------- */
+
+  for (const n of nodes) {
+    const shown = () => n.img.classList.add('is-loaded');
+    const decoded = () => n.img.decode().catch(() => {}).then(shown);
+    if (n.img.complete) decoded();
+    else {
+      n.img.addEventListener('load', decoded, { once: true });
+      n.img.addEventListener('error', shown, { once: true });
+    }
+  }
 
   /* ---------- hover: bring one project's route forward ---------- */
 
@@ -36,12 +63,14 @@ function start(root: HTMLElement) {
     park.classList.toggle('has-focus', pi >= 0);
     for (const g of routes) g.classList.toggle('is-on', Number(g.dataset.pi) === pi);
     if (pi >= 0) hintLabel.textContent = title;
-    hint.classList.toggle('is-on', pi >= 0 && !!withHint && canHover);
+    hint.classList.toggle('is-on', pi >= 0 && withHint && canHover);
   }
 
   for (const n of nodes) {
     const a = n.link;
-    a.addEventListener('pointerenter', (e) => { if (e.pointerType !== 'touch') focusProject(n.pi, a.getAttribute('aria-label') || '', true); });
+    a.addEventListener('pointerenter', (e) => {
+      if (e.pointerType !== 'touch') focusProject(n.pi, a.getAttribute('aria-label') || '', true);
+    });
     a.addEventListener('pointerleave', () => focusProject(-1));
     a.addEventListener('focus', () => {
       focusProject(n.pi);
@@ -84,7 +113,12 @@ function start(root: HTMLElement) {
     target.x = vw / 2 - wx * target.s;
     target.y = vh / 2 - wy * target.s;
     clamp();
-    if (!ready) { cur.x = target.x; cur.y = target.y; cur.s = target.s; ready = true; }
+    if (!ready) {
+      cur.x = target.x; cur.y = target.y; cur.s = target.s;
+      ready = true;
+      paint();
+      settle();
+    } else kick();
   }
 
   function zoomTo(s: number, fx: number, fy: number) {
@@ -94,6 +128,7 @@ function start(root: HTMLElement) {
     target.y = fy - (fy - target.y) * k;
     target.s = s;
     clamp();
+    kick();
   }
 
   const setLevel = (i: number) => zoomTo(sMin * Math.pow(STEP, Math.max(0, Math.min(LEVELS - 1, i))), vw / 2, vh / 2);
@@ -102,6 +137,7 @@ function start(root: HTMLElement) {
     target.x = vw / 2 - x * target.s;
     target.y = vh / 2 - y * target.s;
     clamp();
+    kick();
   }
 
   /* ---------- input: drag, pinch, wheel, keys ---------- */
@@ -118,12 +154,14 @@ function start(root: HTMLElement) {
     pinch = null;
     if (pointers.size === 1) {
       dragging = true; moved = 0; vel.x = vel.y = 0; lastMove = performance.now();
+      // Catch the map where it is: a touch mid-glide stops the glide.
+      target.x = cur.x; target.y = cur.y;
       root.setAttribute('data-status', 'dragging');
     }
   });
 
   addEventListener('pointermove', (e) => {
-    if (canHover) {
+    if (canHover && active >= 0) {
       hint.style.transform = 'translate3d(' + (e.clientX - rect.left + 14) + 'px,' + (e.clientY - rect.top + 18) + 'px,0)';
     }
     const p = pointers.get(e.pointerId);
@@ -139,6 +177,7 @@ function start(root: HTMLElement) {
       vel.x = vel.x * 0.75 + (dx / dt) * 0.25;
       vel.y = vel.y * 0.75 + (dy / dt) * 0.25;
       clamp();
+      kick();
     } else if (pointers.size === 2) {
       const pts = Array.from(pointers.values());
       const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
@@ -159,11 +198,12 @@ function start(root: HTMLElement) {
     if (pointers.size) return;
     dragging = false;
     root.setAttribute('data-status', 'idle');
-    if (moved > 6 && performance.now() - lastMove < 80) {
+    if (!reduce && moved > 6 && performance.now() - lastMove < 80) {
       const speed = Math.hypot(vel.x, vel.y), cap = speed > 2.2 ? 2.2 / speed : 1;
       target.x += vel.x * cap * 180; target.y += vel.y * cap * 180; // a little glide
       clamp();
     }
+    kick();
     setTimeout(() => { moved = 0; }, 60);
   }
   addEventListener('pointerup', release);
@@ -192,51 +232,88 @@ function start(root: HTMLElement) {
     }
     e.preventDefault();
     clamp();
+    kick();
   });
 
-  addEventListener('resize', measure);
+  let resizeTimer = 0;
+  addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = window.setTimeout(measure, 60);
+  });
 
-  /* ---------- frame loop ---------- */
+  /* ---------- frames: only while something is moving ---------- */
 
-  let lastT = 0, lastS = 0;
+  let raf = 0, lastT = 0;
+  let paintedS = 0; // the scale the park was last drawn crisply at
+  let zooming = false;
+
+  function kick() {
+    if (!raf && ready) {
+      lastT = performance.now();
+      raf = requestAnimationFrame(frame);
+    }
+  }
+
+  function paint() {
+    world.style.transform = 'translate3d(' + cur.x.toFixed(2) + 'px,' + cur.y.toFixed(2) + 'px,0) scale(' + cur.s.toFixed(5) + ')';
+  }
+
   function frame(t: number) {
-    const dt = Math.min(64, t - lastT || 16);
+    raf = 0;
+    const dt = Math.min(64, Math.max(1, t - lastT));
     lastT = t;
-    const k = reduce ? 1 : 1 - Math.exp(-dt / (dragging ? 45 : 120));
+    // Under a finger the map follows exactly; otherwise it eases in.
+    const k = reduce || dragging ? 1 : 1 - Math.exp(-dt / EASE_MS);
     cur.x += (target.x - cur.x) * k;
     cur.y += (target.y - cur.y) * k;
     cur.s += (target.s - cur.s) * k;
-    world.style.transform = 'translate3d(' + cur.x.toFixed(2) + 'px,' + cur.y.toFixed(2) + 'px,0) scale(' + cur.s.toFixed(5) + ')';
-    // Keep the park's linework hairline at any zoom (updated in small steps while zooming).
-    if (Math.abs(cur.s - lastS) > lastS * 0.02 || (lastS !== cur.s && Math.abs(cur.s - target.s) < 0.00002)) {
-      lastS = cur.s;
-      world.style.setProperty('--ls', (1 / cur.s).toFixed(3));
+
+    // Scaling: hold the park as one layer on the GPU rather than redrawing it
+    // every frame. If it has grown a lot, redraw it once mid-zoom so it never
+    // looks soft for long.
+    if (!zooming && Math.abs(cur.s - paintedS) > paintedS * 0.001) {
+      zooming = true;
+      world.classList.add('is-zooming');
+    } else if (zooming && (cur.s / paintedS > 1.8 || cur.s / paintedS < 0.45)) {
+      paintedS = cur.s;
+      world.classList.remove('is-zooming');
+      requestAnimationFrame(() => { if (zooming) world.classList.add('is-zooming'); });
     }
-    if (!reduce) {
-      for (const n of nodes) {
-        n.el.style.transform = 'translate3d(' + (Math.sin(t * n.f1 + n.p1) * 14).toFixed(2) + 'px,' +
-          (Math.cos(t * n.f2 + n.p2) * 14).toFixed(2) + 'px,0)';
+
+    const done = !dragging && Math.abs(target.x - cur.x) < 0.1 && Math.abs(target.y - cur.y) < 0.1 && Math.abs(target.s - cur.s) < cur.s * 1e-4;
+    if (done) { cur.x = target.x; cur.y = target.y; cur.s = target.s; }
+    paint();
+    if (done) settle();
+    else raf = requestAnimationFrame(frame);
+  }
+
+  // The map has come to rest: draw it crisply at this scale.
+  function settle() {
+    if (zooming) { zooming = false; world.classList.remove('is-zooming'); }
+    if (Math.abs(cur.s - paintedS) > paintedS * 1e-4) {
+      paintedS = cur.s;
+      world.style.setProperty('--ls', (1 / cur.s).toFixed(4)); // keep the park's linework hairline
+    }
+    sharpen();
+  }
+
+  // Pieces on (or near) screen that are now drawn larger than their image was
+  // chosen for ask for a sharper copy; the browser picks it from srcset.
+  function sharpen() {
+    const mx = vw * 0.5, my = vh * 0.5;
+    for (const n of nodes) {
+      const px = n.w * cur.s;
+      if (px <= n.drawn * 1.15) continue;
+      const sx = cur.x + n.x * cur.s, sy = cur.y + n.y * cur.s, hw = px / 2, hh = (n.h * cur.s) / 2;
+      if (sx + hw < -mx || sx - hw > vw + mx || sy + hh < -my || sy - hh > vh + my) continue;
+      if (n.drawn) {
+        const sizes = Math.ceil(px) + 'px';
+        for (const s of n.sources) s.sizes = sizes;
+        n.img.sizes = sizes;
       }
+      n.drawn = px;
     }
-    requestAnimationFrame(frame);
   }
 
   measure();
-  requestAnimationFrame(frame);
-
-  // Fade the map in once the first pieces have arrived (or after a short wait).
-  let shown = false;
-  function show() {
-    if (shown) return;
-    shown = true;
-    if (root.getAttribute('data-status') === 'loading') root.setAttribute('data-status', 'idle');
-  }
-  let pending = nodes.length;
-  for (const n of nodes) {
-    const img = n.link.querySelector('img')!;
-    const done = () => { if (--pending <= 0) show(); };
-    if (img.complete) done();
-    else { img.addEventListener('load', done); img.addEventListener('error', done); }
-  }
-  setTimeout(show, 1800);
 }

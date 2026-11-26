@@ -129,16 +129,30 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
   .header__links { font-size: 1.0625rem; }
 }
 
+/* Moving between pages: a quick cross-fade, with the header held still. */
+@view-transition { navigation: auto; }
+.header { view-transition-name: header; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: .25s; }
+
+.scroll-marker { position: absolute; top: 0; left: 0; width: 1px; height: 9px; pointer-events: none; }
+
 .topfade { position: fixed; inset: 0 0 auto 0; height: 50vh; z-index: 90; pointer-events: none; }
 .topfade__blur {
   position: absolute; inset: 0 0 auto 0;
   -webkit-mask-image: linear-gradient(#000, transparent);
   mask-image: linear-gradient(#000, transparent);
 }
+/* A progressive blur: each layer blurs a shorter band more strongly. Every
+   backdrop blur is redrawn whenever anything beneath it moves, so it uses
+   three layers (two on phones) where four would look no different. */
 .topfade__blur:nth-child(1) { height: 40%; -webkit-backdrop-filter: blur(2px);  backdrop-filter: blur(2px); }
-.topfade__blur:nth-child(2) { height: 30%; -webkit-backdrop-filter: blur(4px);  backdrop-filter: blur(4px); }
-.topfade__blur:nth-child(3) { height: 20%; -webkit-backdrop-filter: blur(8px);  backdrop-filter: blur(8px); }
-.topfade__blur:nth-child(4) { height: 10%; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+.topfade__blur:nth-child(2) { height: 22%; -webkit-backdrop-filter: blur(6px);  backdrop-filter: blur(6px); }
+.topfade__blur:nth-child(3) { height: 10%; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+@media (max-width: 991px), (pointer: coarse) {
+  .topfade__blur:nth-child(1) { height: 34%; -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+  .topfade__blur:nth-child(2) { height: 14%; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+  .topfade__blur:nth-child(3) { display: none; }
+}
 .topfade__wash {
   position: absolute; inset: 0;
   background: linear-gradient(to bottom, rgba(255, 255, 255, .66), transparent);
@@ -183,6 +197,7 @@ main { flex: 1 0 auto; }
 
 .map {
   position: relative;
+  container-type: size;              /* 100cqw x 100cqh = the map's own box */
   height: 100vh;
   height: 100dvh;
   overflow: hidden;
@@ -200,9 +215,23 @@ main { flex: 1 0 auto; }
 .map__world {
   position: absolute; top: 0; left: 0;
   transform-origin: 0 0;
-  transition: opacity .6s;
 }
-.map[data-status="loading"] .map__world { opacity: 0; }
+/* The opening view, before any script runs: the 6000 x 4200 map scaled to
+   1.2 x the screen's longer side and centred (map.ts takes over from exactly
+   here). tan(atan2(a, b)) is a / b as a plain number, which scale() needs. */
+@supports (scale: tan(atan2(1px, 1px))) {
+  .map__world {
+    --s0: tan(atan2(max(100cqw * .0002, 100cqh * .00028571), 1px));
+    --ls: calc(1 / var(--s0));
+    transform: translate3d(calc(50cqw - 3000px * var(--s0)), calc(50cqh - 2100px * var(--s0)), 0) scale(var(--s0));
+  }
+}
+@supports not (scale: tan(atan2(1px, 1px))) {
+  .map__world:not([style]) { visibility: hidden; }
+}
+/* While zooming, the browser scales the map as it was last drawn instead of
+   redrawing it each frame; map.ts removes this once the map settles. */
+.map__world.is-zooming { will-change: transform; }
 
 /* The park. Ground is barely there; routes and pieces carry the picture.
    --hair keeps linework one hairline wide on screen at every zoom. */
@@ -245,23 +274,35 @@ main { flex: 1 0 auto; }
 
 .park__bridge { fill: none; stroke: #c6c2b8; stroke-linecap: butt; }
 
-.map__node { position: absolute; }
+.map__node {
+  position: absolute;
+  /* The slow drift. Durations and phases per piece are set by the page. */
+  animation: drift-x 1s cubic-bezier(.37, 0, .63, 1) infinite alternate, drift-y 1s cubic-bezier(.37, 0, .63, 1) infinite alternate;
+}
+@keyframes drift-x { from { translate: -14px 0; } to { translate: 14px 0; } }
+@keyframes drift-y { from { transform: translateY(-14px); } to { transform: translateY(14px); } }
 .map__link {
   display: block; width: 100%; height: 100%;
   -webkit-user-drag: none;
   /* a soft shadow lifts each piece off the park (sizes are in map units) */
   box-shadow: 0 14px 44px rgba(32, 32, 32, .16), 0 2px 8px rgba(32, 32, 32, .1);
-  transition: opacity 1s var(--ease-out), transform 1.2s var(--ease-out);
-  transition-delay: var(--d, 0ms);
+  /* On arrival the pieces rise in a ripple from the centre of the park. */
+  animation: piece-in 1.2s var(--ease-out) var(--d, 0ms) both;
 }
-.map[data-status="loading"] .map__link { opacity: 0; transform: scale(.9); }
+@keyframes piece-in { from { opacity: 0; transform: scale(.9); } }
 .map__link:focus-visible { outline: calc(1.5px * var(--ls, 1)) solid var(--ink); outline-offset: calc(5px * var(--ls, 1)); }
 .map__img {
   display: block; width: 100%; height: 100%; object-fit: cover;
-  transition: filter .3s;
+  transition: filter .3s, opacity .5s;
   -webkit-user-drag: none;
   pointer-events: none;
 }
+/* With script running, each piece shows once its image is decoded (map.ts),
+   so none flashes in half-drawn; after a few seconds they show regardless. */
+@media (scripting: enabled) {
+  .map__img:not(.is-loaded) { opacity: 0; animation: show-anyway 0s 4s forwards; }
+}
+@keyframes show-anyway { to { opacity: 1; } }
 @media (hover: hover) {
   .map__link:hover .map__img { filter: brightness(1.06); }
 }
@@ -495,9 +536,11 @@ main { flex: 1 0 auto; }
    ========================================================================== */
 
 @media (prefers-reduced-motion: reduce) {
-  .map__world, .map__link, .wi, .media img { transition: none !important; }
+  .map__link, .wi, .media img, .map__img { transition: none !important; }
+  .map__node, .map__link { animation: none; }
   .park__route { transition: opacity .2s; }
   .map__hint.is-on { transition-delay: 0s; }
   .form__step.is-active { animation: none; }
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
   .js .media img { filter: none; }
 }

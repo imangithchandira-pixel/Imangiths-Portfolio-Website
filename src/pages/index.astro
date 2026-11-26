@@ -14,22 +14,36 @@ const og = await ogImage('marseille-md');
 // CSS pixels. The map raises `sizes` as you zoom in, fetching sharper copies.
 const nodeSizes = (w: number) => `calc(max(100vw, ${r((W / H) * 100)}vh) * ${((w * 1.2) / W).toFixed(4)})`;
 
-// Each piece's place on the map, as plain CSS rules (no inline style attributes).
+/* Each piece's place on the map, as plain CSS rules (no inline style attributes).
+
+   Each piece also drifts: x = 14 sin(f1 t + p1), y = 14 cos(f2 t + p2) map units.
+   That is two compositor animations swinging from -14 to 14 on a sine curve,
+   each lasting half a period (π / f) and started part-way in to set its phase. */
+const TAU = Math.PI * 2;
+const drift = (f: number, phase: number) => {
+  const half = Math.PI / f;
+  const into = ((((phase + Math.PI / 2) % TAU) + TAU) % TAU) / f;
+  return [Math.round(half), Math.round(into)];
+};
 const css =
   `.map__world{width:${W}px;height:${H}px}` +
   nodes
-    .map(
-      (n, i) =>
-        `.n${i}{left:${r(n.x - n.w / 2)}px;top:${r(n.y - n.h / 2)}px;width:${r(n.w)}px;height:${r(n.h)}px}` +
+    .map((n, i) => {
+      const [dx, ix] = drift(n.f1, n.p1);
+      const [dy, iy] = drift(n.f2, n.p2 + Math.PI / 2);
+      return (
+        `.n${i}{left:${r(n.x - n.w / 2)}px;top:${r(n.y - n.h / 2)}px;width:${r(n.w)}px;height:${r(n.h)}px;` +
+        `animation-duration:${dx}ms,${dy}ms;animation-delay:-${ix}ms,-${iy}ms}` +
         `.n${i}>a{--d:${Math.round(Math.hypot(n.x - W / 2, n.y - H / 2) / 6)}ms}`
-    )
+      );
+    })
     .join('');
 ---
 
 <Base description={SITE.description} htmlClass="is-map" wash={false} footer={false} ogImage={og}>
   <style is:inline slot="head" set:html={css} />
 
-  <main class="map" data-map data-status="loading" aria-label="Projects map" tabindex="-1">
+  <main class="map" data-map data-w={W} data-h={H} aria-label="Projects map" tabindex="-1">
     <h1 class="sr-only">Chandira Imanjith — sketches and studies</h1>
     <div class="map__world">
       <Fragment set:html={svg} />
@@ -40,7 +54,8 @@ const css =
             data-x={n.x}
             data-y={n.y}
             data-pi={n.pi}
-            data-drift={[n.f1, n.f2, n.p1, n.p2].map((v) => v.toFixed(6)).join(' ')}
+            data-w={r(n.w)}
+            data-h={r(n.h)}
           >
             <a class="map__link" href={`/projects/${n.project.slug}`} draggable="false" aria-label={n.project.title}>
               <Picture
@@ -53,7 +68,6 @@ const css =
                 alt=""
                 draggable="false"
                 loading="eager"
-                data-w={r(n.w)}
               />
             </a>
           </div>
