@@ -1,6 +1,7 @@
 /* Shared behaviour: text and image reveals, header state, the footer year. */
 
 const html = document.documentElement;
+html.classList.add('is-live');
 export const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* ---------- small things ---------- */

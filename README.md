@@ -30,6 +30,14 @@ npm run build   # build the site into dist/
 
 Pushing to `main` deploys to Vercel. Old links such as `project.html?p=malaga` redirect to the new addresses (`/projects/malaga`).
 
+## Security
+
+- Every page carries a strict Content Security Policy: only the site's own scripts and styles run (inline ones only by hash), and the only other address a page can contact is Web3Forms, for the contact form.
+- `vercel.json` adds the headers a policy inside the page can't: no framing by other sites, no MIME sniffing, a strict referrer policy, every browser feature the site doesn't use (camera, microphone, location…) switched off, and cross-origin isolation of windows and files.
+- Dependencies are pinned in `package-lock.json`, installed with `npm ci`, and never allowed to run install scripts (`.npmrc`). Dependabot opens update PRs weekly and right away for security advisories.
+- The Web3Forms access key in `src/data/site.ts` is public by design: it can only deliver notes to the site's own inbox. For extra protection, restrict it to this site's domain in the Web3Forms dashboard.
+- Found a problem? See [/.well-known/security.txt](https://imangiths-portfolio-website.vercel.app/.well-known/security.txt).
+
 ## Getting in touch
 
 The contact form sends your note by email through [Web3Forms](https://web3forms.com). If it can't be sent, it opens your own email app with the note ready to send instead. You can also write directly to [imangithchandira@gmail.com](mailto:imangithchandira@gmail.com) or connect on [LinkedIn](https://www.linkedin.com/in/chandira-imanjith-b4b7283a2).
