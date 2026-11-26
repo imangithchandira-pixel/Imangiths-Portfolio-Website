@@ -1,0 +1,27 @@
+---
+interface Props {
+  current?: 'projects' | 'about';
+}
+const { current } = Astro.props;
+const links = [
+  { key: 'projects', href: '/projects', label: 'Projects' },
+  { key: 'about', href: '/about', label: 'About' }
+] as const;
+---
+
+<header class="header">
+  <nav class="header__nav" aria-label="Main">
+    <a class="header__logo" href="/">Chandira Imanjith</a>
+    <ul class="header__links">
+      {
+        links.map((l) => (
+          <li>
+            <a href={l.href} aria-current={current === l.key ? 'page' : undefined}>
+              {l.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+</header>

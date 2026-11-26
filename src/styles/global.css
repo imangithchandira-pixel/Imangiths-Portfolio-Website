@@ -280,7 +280,11 @@ main { flex: 1 0 auto; }
   background-position: var(--m) var(--m);
 }
 .mat::before { content: ""; position: absolute; inset: 0; background: linear-gradient(to top right, rgba(46, 125, 90, .045), rgba(46, 125, 90, 0) 70%); }
-.mat svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+/* The markings are drawn from the mat's bottom-left corner; the ruler numbers
+   stop short of the top and right edges, clear of the header. */
+.mat { overflow: hidden; }
+.mat__layer { position: absolute; left: 0; bottom: 0; overflow: visible; }
+.mat__rulers { position: absolute; inset: 70px 30px 0 0; overflow: hidden; }
 .mat__guide { fill: none; stroke: rgba(46, 125, 90, .06); stroke-width: 1; }
 .mat__mark  { fill: rgba(46, 125, 90, .16); font-family: var(--font); font-size: 9px; letter-spacing: .04em; }
 
@@ -294,6 +298,8 @@ main { flex: 1 0 auto; }
 }
 .bento__col { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 28px; }
 .bento__item { position: relative; display: block; }
+.o1 { order: 1; } .o2 { order: 2; } .o3 { order: 3; } .o4 { order: 4; } .o5 { order: 5; }
+.o6 { order: 6; } .o7 { order: 7; } .o8 { order: 8; } .o9 { order: 9; } .o10 { order: 10; } .o11 { order: 11; }
 .bento__item .media {
   border-radius: 10px;
   background: #fff;
@@ -328,7 +334,7 @@ main { flex: 1 0 auto; }
 .project__desc  { grid-column: 7 / span 6; }
 
 .project__row + .project__row { margin-top: calc(var(--line) * 3); }
-.project__fig { grid-column: var(--c); }
+.project__fig { grid-column: 1 / -1; }  /* placed on wide screens by the page's own c<start>-<span> classes */
 .project__fig figcaption { margin-top: 4px; font-size: .875rem; line-height: 1.25; }
 
 .project__meta { margin-block: var(--section); font-size: 1.125rem; line-height: 1.5; }
@@ -448,6 +454,19 @@ main { flex: 1 0 auto; }
 .form__actions button { transition: opacity .3s; }
 .form__actions button:hover { opacity: .4; }
 .form__actions [hidden] { display: none; }
+
+/* ==========================================================================
+   Not found
+   ========================================================================== */
+
+.notfound { padding-block: var(--section); font-size: 1.125rem; line-height: 1.5; row-gap: 16px; }
+.notfound__title { grid-column: 1 / span 6; }
+.notfound__links { grid-column: 7 / span 6; display: flex; flex-direction: column; gap: 4px; }
+.notfound__links a { transition: opacity .3s; }
+.notfound__links a:hover { opacity: .4; }
+@media (max-width: 991px) {
+  .notfound__title, .notfound__links { grid-column: 1 / -1; }
+}
 
 /* ==========================================================================
    Reduced motion

@@ -1,0 +1,11 @@
+---
+import { SITE } from '../data/site';
+---
+
+<footer class="footer">
+  <span>Copyright {SITE.name} <span data-year>{new Date().getFullYear()}</span></span>
+  <span class="footer__links">
+    <a href={`mailto:${SITE.email}`}>Email</a>
+    <a href={SITE.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn</a>
+  </span>
+</footer>

@@ -1,0 +1,60 @@
+---
+import Base from '../layouts/Base.astro';
+import { PROJECTS } from '../data/site';
+import { imgUrl } from '../lib/park';
+
+// Two columns, filled alternately, so tall and wide tiles interlock. Each tile
+// also gets its place in project order for when the columns collapse to one.
+const tiles = PROJECTS.map((p, i) => ({ p, i, image: p.tile || p.cover }));
+const columns = [tiles.filter((t) => t.i % 2 === 0), tiles.filter((t) => t.i % 2 === 1)];
+
+/* The mat's markings, drawn from its bottom-left corner: ruler numbers at each
+   heavy line (counted in centimetres) and angle guides fanning from the corner.
+   Coordinates are in px with y = 0 at the bottom edge, so they fit any screen. */
+const M = 20, MAJOR = 100, REACH = 7400, SPAN = 6000, RISE = 4000;
+const across = Array.from({ length: Math.floor((SPAN - M) / MAJOR) }, (_, k) => ({ x: M + MAJOR * (k + 1) + 3, i: 5 * (k + 1) }));
+const up = Array.from({ length: Math.floor((RISE - M) / MAJOR) }, (_, k) => ({ y: -(M + MAJOR * (k + 1)) - 3, i: 5 * (k + 1) }));
+const guides = [15, 30, 45, 60, 75].map((deg) => {
+  const r = (deg * Math.PI) / 180;
+  return {
+    deg,
+    x2: (M + Math.cos(r) * REACH).toFixed(1), y2: (-M - Math.sin(r) * REACH).toFixed(1),
+    lx: (M + Math.cos(r) * 150 + 4).toFixed(1), ly: (-M - Math.sin(r) * 150 - 4).toFixed(1)
+  };
+});
+const view = `0 ${-RISE} ${SPAN} ${RISE}`;
+---
+
+<Base description="Tower Sketches, Black & White Ink, Málaga, Marseille and Colombo Town Hall: sketches and studies by Chandira Imanjith." current="projects" footer={false}>
+  <div class="mat" aria-hidden="true">
+    <svg class="mat__layer" viewBox={view} width={SPAN} height={RISE} focusable="false">
+      {guides.map((g) => <line class="mat__guide" x1={M} y1={-M} x2={g.x2} y2={g.y2} />)}
+      {[100, 200].map((r) => <path class="mat__guide" d={`M ${M + r} ${-M} A ${r} ${r} 0 0 0 ${M} ${-M - r}`} />)}
+      {guides.map((g) => <text class="mat__mark" x={g.lx} y={g.ly}>{g.deg}°</text>)}
+    </svg>
+    <div class="mat__rulers">
+      <svg class="mat__layer" viewBox={view} width={SPAN} height={RISE} focusable="false">
+        {across.map((m) => <text class="mat__mark" x={m.x} y="-6">{m.i}</text>)}
+        {up.map((m) => <text class="mat__mark" x="4" y={m.y}>{m.i}</text>)}
+      </svg>
+    </div>
+  </div>
+
+  <main class="bento">
+    <h1 class="sr-only">Projects</h1>
+    {
+      columns.map((col) => (
+        <div class="bento__col">
+          {col.map(({ p, i, image }) => (
+            <a class={`bento__item o${i}`} href={`/projects/${p.slug}`}>
+              <div class="media" data-reveal="img">
+                <img src={imgUrl(image[0])} alt="" width={image[1]} height={image[2]} decoding="async" />
+              </div>
+              <span class="bento__title">{p.title}</span>
+            </a>
+          ))}
+        </div>
+      ))
+    }
+  </main>
+</Base>
