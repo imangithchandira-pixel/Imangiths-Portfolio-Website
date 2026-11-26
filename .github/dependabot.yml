@@ -18,6 +18,10 @@ updates:
       # @astrojs/check supports TypeScript 5 and 6 only; take a new major when it does.
       - dependency-name: typescript
         update-types: ['version-update:semver-major']
+      # Node's type definitions follow the Node version the site runs on (24, set
+      # in package.json engines); move both together by hand.
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
   - package-ecosystem: github-actions
     directory: /
     schedule:
