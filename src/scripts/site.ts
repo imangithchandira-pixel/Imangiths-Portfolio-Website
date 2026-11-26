@@ -23,13 +23,19 @@ if ('IntersectionObserver' in window) {
 
 /* ---------- reveals ---------- */
 
-// Wrap each word so lines can slide up one after another.
-function split(el: Element) {
+// Wrap each word so lines can slide up one after another. All the wrapping is
+// done first, then every word's position is read in one pass (one layout),
+// then each word is tagged with its line: reading and writing in turn would
+// make the browser lay the page out again for every word.
+const MAX_LINE = 19; // matches the .l0-.l19 delays in global.css
+
+function wrap(el: Element): HTMLElement[] {
   const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
   const texts: Text[] = [];
   let node: Node | null;
   while ((node = walker.nextNode())) texts.push(node as Text);
 
+  const words: HTMLElement[] = [];
   for (const tn of texts) {
     const frag = document.createDocumentFragment();
     for (const part of (tn.nodeValue || '').split(/(\s+)/)) {
@@ -45,21 +51,29 @@ function split(el: Element) {
       wi.textContent = part;
       w.appendChild(wi);
       frag.appendChild(w);
+      words.push(w);
     }
     tn.parentNode!.replaceChild(frag, tn);
   }
+  return words;
+}
 
-  let top: number | null = null;
-  let line = -1;
-  el.querySelectorAll<HTMLElement>('.w').forEach((w) => {
-    const t = w.offsetTop;
-    if (top === null || Math.abs(t - top) > 2) {
-      line++;
-      top = t;
-    }
-    (w.firstChild as HTMLElement).style.setProperty('--i', String(line));
+function split(els: Element[]) {
+  const groups = els.map(wrap); // writes
+  const tops = groups.map((words) => words.map((w) => w.offsetTop)); // one layout, then reads
+  groups.forEach((words, g) => {
+    let top: number | null = null;
+    let line = -1;
+    words.forEach((w, i) => {
+      const t = tops[g][i];
+      if (top === null || Math.abs(t - top) > 2) {
+        line++;
+        top = t;
+      }
+      w.firstElementChild!.classList.add('l' + Math.min(line, MAX_LINE));
+    });
+    els[g].classList.add('is-split');
   });
-  el.classList.add('is-split');
 }
 
 const io =
@@ -76,15 +90,13 @@ const io =
       )
     : null;
 
-const seen = new WeakSet<Element>();
 function reveal() {
-  document.querySelectorAll('[data-reveal]').forEach((el) => {
-    if (seen.has(el)) return;
-    seen.add(el);
-    if (el.getAttribute('data-reveal') === 'text') split(el);
+  const all = Array.from(document.querySelectorAll('[data-reveal]'));
+  split(all.filter((el) => el.getAttribute('data-reveal') === 'text'));
+  for (const el of all) {
     if (reduce || !io) el.classList.add('is-in');
     else io.observe(el);
-  });
+  }
 }
 
 reveal();
