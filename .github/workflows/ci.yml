@@ -1,6 +1,6 @@
 # Checks every pull request and every push to main: types, a clean build, a
 # dependency audit, and the end-to-end tests in Chromium at desktop and phone
-# sizes. Vercel deploys separately; this tells you whether a change is safe.
+# sizes. Cloudflare deploys separately; this tells you whether a change is safe.
 name: CI
 
 on:

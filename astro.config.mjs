@@ -2,9 +2,9 @@
 import { defineConfig } from 'astro/config';
 
 export default defineConfig({
-  site: 'https://imangiths-portfolio-website.vercel.app',
-  // about.html, projects/malaga.html …; Vercel serves them without the
-  // extension (cleanUrls in vercel.json).
+  site: 'https://chandiraimanjith.com',
+  // about.html, projects/malaga.html …; Cloudflare serves them without the
+  // extension (html_handling in wrangler.jsonc).
   // The stylesheet (under 4 KB compressed) goes inside each page, so the first
   // paint doesn't wait for a second request. Its hash is in the CSP.
   build: { format: 'file', inlineStylesheets: 'always' },
@@ -15,7 +15,7 @@ export default defineConfig({
     // this site's own scripts and styles run (inline ones by their SHA-256
     // hash), and the only other place the page may talk to is Web3Forms, for
     // the contact form. Directives a <meta> policy can't carry (frame-ancestors)
-    // are sent as headers from vercel.json.
+    // are sent as headers from public/_headers.
     csp: {
       algorithm: 'SHA-256',
       directives: [

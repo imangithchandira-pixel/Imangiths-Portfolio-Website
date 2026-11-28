@@ -130,3 +130,43 @@ test('text and images still appear when JavaScript is off', async ({ browser }) 
   await expect(page.locator('.map__link').first()).toBeVisible();
   await ctx.close();
 });
+
+test('security headers are sent with every page', async ({ request }) => {
+  for (const path of ['/', '/about', '/no-such-page']) {
+    const res = await request.get(path);
+    const h = res.headers();
+    expect(h['content-security-policy'], path).toContain("frame-ancestors 'none'");
+    expect(h['x-frame-options'], path).toBe('DENY');
+    expect(h['x-content-type-options'], path).toBe('nosniff');
+    expect(h['strict-transport-security'], path).toContain('max-age=63072000');
+  }
+});
+
+test('addresses are clean: no .html, no trailing slash', async ({ request }) => {
+  for (const [from, to] of [['/about.html', '/about'], ['/about/', '/about'], [`/projects/${PROJECTS[0].slug}.html`, `/projects/${PROJECTS[0].slug}`]]) {
+    const res = await request.get(from, { maxRedirects: 0 });
+    expect(res.status(), from).toBeGreaterThanOrEqual(301);
+    expect(res.status(), from).toBeLessThanOrEqual(308);
+    expect(new URL(res.headers()['location'], 'http://x').pathname, from).toBe(to);
+  }
+});
+
+test('old single-page links redirect to the new project pages', async ({ request }) => {
+  const slug = PROJECTS[0].slug;
+  for (const [from, to] of [[`/project.html?p=${slug}`, `/projects/${slug}`], [`/project?p=${slug}`, `/projects/${slug}`], ['/project.html', '/projects'], ['/project?p=../evil', '/projects']]) {
+    const res = await request.get(from, { maxRedirects: 0 });
+    expect(res.status(), from).toBe(301);
+    expect(res.headers()['location'], from).toBe(to);
+  }
+});
+
+test('built files are cached for a year', async ({ request, page }) => {
+  await page.goto('/');
+  const asset = await page.$$eval('[src^="/_astro/"], [href^="/_astro/"], [srcset*="/_astro/"]', (els) =>
+    els.map((e) => e.getAttribute('src') || e.getAttribute('href') || (e.getAttribute('srcset') || '').split(' ')[0]).find(Boolean)
+  );
+  expect(asset).toBeTruthy();
+  const res = await request.get(asset!);
+  expect(res.status()).toBe(200);
+  expect(res.headers()['cache-control']).toContain('immutable');
+});
