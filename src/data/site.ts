@@ -51,7 +51,7 @@ export interface Project {
 
 export const SITE = {
   name: 'Chandira Imanjith',
-  url: 'https://imangiths-portfolio-website.vercel.app',
+  url: 'https://chandiraimanjith.com',
   description:
     'Sketches and studies by Chandira Imanjith, a first-year architecture student at the City School of Architecture, Colombo.',
   email: 'imangithchandira@gmail.com',

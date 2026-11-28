@@ -1,0 +1,21 @@
+// Cloudflare Workers: serves the built site (dist/) as static assets on
+// chandiraimanjith.com. Pushing to main builds and deploys it (Workers Builds
+// runs `npm run build`, then `npx wrangler deploy`).
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "imangiths-portfolio-website",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    // about.html is served at /about, and /about/ or /about.html redirect there.
+    "html_handling": "drop-trailing-slash",
+    "not_found_handling": "404-page",
+    // Only the old single-page links need code; every other request is a
+    // plain file, served without running the Worker at all.
+    "run_worker_first": ["/project", "/project.html"]
+  },
+  "routes": [{ "pattern": "chandiraimanjith.com", "custom_domain": true }],
+  "observability": { "enabled": true }
+}
